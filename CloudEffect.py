@@ -9,10 +9,10 @@
 
 import marimo
 
-__generated_with = "0.15.0"
+__generated_with = "0.16.5"
 app = marimo.App(width="medium")
 
-with app.setup:
+with app.setup(hide_code=True):
     # Initialization code that runs before all other cells
     import marimo as mo
     from matplotlib import pyplot as plt
@@ -53,7 +53,7 @@ with app.setup:
         types=[tm[typestr] for typestr in next(records)]
         NT=namedtuple(tuplename,names)
         return {types[0](record[0]):NT(*(T(value) for T,value in zip(types,record))) for record in records}
-         
+
     Planets=csv2tuples(Planet_csv)
 
     Length_units={
@@ -65,7 +65,7 @@ with app.setup:
     units|=Length_units
 
     def sci_tex(value: float, fmt: str = "0.3f", unit: str = None, style: str = None, ) -> str:
-    
+
         from math import floor,log10
         if style==None:
             style="s"#default if scientific E format  
@@ -89,7 +89,7 @@ with app.setup:
                 tex=rf"{{{mantissa:{fmt}} \times 10^\mathrm{{{exp}}}}}"
         else:
             tex=rf"\text{{{value:{fmt}}}}"
-        
+
         if unit:
             processed_unit = (unit
                 .replace("**", "^")
@@ -107,7 +107,7 @@ with app.setup:
     class TeXfloat(float):
         """
         Subclass of float with custom 'T' format specifier for LaTeX scientific/engineering notation.
-    
+
         Usage:
             >>> tf = TeXFloat(1234.567)
             >>> f"{tf:.3engT[m]}"  # '{1.235 \\times 10^{3}} \\,\\mathrm{m}'
@@ -115,7 +115,7 @@ with app.setup:
             >>> f"{tf:.3T[]}"  # '{1.235 \\times 10^{3}}' (no unit)
             >>> tf * 2  # 2469.134 (plain float ops)
             >>> f"{tf + 100:.0T[m/s]}"  # '{1 \\times 10^{3}} \\,\\mathrm{\\frac{m}{s}}' (prec=0, default eng)
-    
+
         Spec format: :.prec[eng|e]T[unit]
         - prec: Decimal places (default 3).
         - eng/e: Mode before T (default eng).
@@ -149,6 +149,12 @@ with app.setup:
     TeX_M=TeXfloat(1e6)
     TeX_G=TeXfloat(1e9)
     TeX_T=TeXfloat(1e12)
+
+
+@app.cell
+def _():
+    mo.outline()
+    return
 
 
 @app.cell(hide_code=True)
@@ -192,38 +198,38 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     get_R_orbit,set_R_orbit=mo.state(au)
     return get_R_orbit, set_R_orbit
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(set_R_orbit):
     def update_R_orbit(*args,**kwargs):
         new_R_orbit=Planet_selector.value[Orbit_selector.value]
         if new_R_orbit != 0.0:
             set_R_orbit(new_R_orbit)
-        
+
     Planet_selector=mo.ui.dropdown(options=Planets, value="Earth", on_change=update_R_orbit) 
     Orbit_options={key:Planets["Earth"]._fields.index(value) for key,value in {"orbit":"R_orbit","perihelion":"r_per","aphelion":"r_ap"}.items()}
     Orbit_selector=mo.ui.dropdown(options=Orbit_options,value="orbit", on_change=update_R_orbit)
     return Orbit_selector, Planet_selector
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     R_orbit_unit=mo.ui.dropdown(options=Length_units,value="au")
     return (R_orbit_unit,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(R_orbit_unit, get_R_orbit, set_R_orbit):
     R_orbit_number=mo.ui.number(value=get_R_orbit()/R_orbit_unit.value, on_change=lambda R_au:set_R_orbit(R_au*R_orbit_unit.value))
     return (R_orbit_number,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(get_R_orbit):
     T_BB=T_sun*(r_sun**2/get_R_orbit()**2*1/4)**(1/4)
     return (T_BB,)
@@ -303,7 +309,7 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     h_Trop=12000 #m
     dT_dh=-6.5/1000 #K/m
