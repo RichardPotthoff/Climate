@@ -31,7 +31,7 @@ with app.setup(hide_code=True):
     deg=pi/180 # 1 angle degree in radians (conversion factor)
     atm=101325 # [Pa] atmospheric pressure
     day=24*3600 # [s] length if day in seconds
-    σ_SB=5.67037442e-8 
+    σ_SB=5.67037442e-8 # W/(m**2 K)
 
     Planet_csv="""
     name,R_orbit,r_per,r_ap
@@ -71,7 +71,7 @@ with app.setup(hide_code=True):
         if style==None:
             style="s"#default if scientific E format  
         style=style.lower()
-        if style in "es" and ("e" in fmt or "E" in fmt):
+        if style in "s31" and ("e" in fmt or "E" in fmt):
             fmt=fmt.replace("e","f").replace("E","F")
             if value == 0:
                 tex=rf"{value:{fmt}}"
@@ -80,7 +80,7 @@ with app.setup(hide_code=True):
                 logval=log10(abs_value)
                 exp=floor(logval)
                 mantlog=logval-exp
-                expstep=3 if style.lower() =="e" else 1
+                expstep=3 if style =="3" else 1
                 expsteps,mantcorr=divmod(exp,expstep)
                 exp=expsteps*expstep
                 mantlog=mantlog+mantcorr
@@ -97,7 +97,7 @@ with app.setup(hide_code=True):
                 .replace("*", r"\; ")
                 .replace("°C",r"{^{\boldsymbol{\circ}}}\mathrm{C}")
                 )
-            enu_deno = processed_unit.split('/', 1)
+            enu_deno = processed_unit.split(':', 1)
             if len(enu_deno)==1:
                 tex += rf" \,\mathrm{{{enu_deno[0]}}}"
             else:
@@ -128,13 +128,16 @@ with app.setup(hide_code=True):
         def __rtruediv__(self, other: float)->Self: return(self.__class__(super().__rtruediv__(other))) 
         def __format__(self, spec: str) -> str:
             pattern =  r'^(?P<format>[^Tt]*)(?:(?P<sep>[tT])(?P<style>[^[])?(?:\[(?P<unit>.*))\])?$'
+            fmt, unit, style=spec, None, None
             match=re.match(pattern,spec)
             if match:      
                 gd =match.groupdict()
                 if gd["sep"]:
-                    return sci_tex(float(self), fmt=gd["format"], unit=gd["unit"], style=gd["style"] )
+                    fmt=gd["format"]
+                    style=gd["style"]
+                    unit=gd["unit"]
             # Fallback to standard float format
-            return sci_tex(float(self), fmt=spec, unit=None, style=None)
+            return sci_tex(float(self), fmt=fmt, style=style, unit=unit)
 
     #constants that can be used for converting float to TeXfloat
     TeX_0=TeXfloat(0.0)
@@ -154,28 +157,32 @@ with app.setup(hide_code=True):
 
 @app.cell
 def _():
-    mo.outline()
+    mo.md(
+        f"""
+    # Table of Contents
+    {mo.outline()}
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
-def _():
-    mo.md(
-        rf"""
-    # Symbols
+def _(TeX_Macro):
+    mo.md(f"{TeX_Macro}"r"""
+    # Symbols and Constants
     | Symbol | Definition |
     | ---:|:--- |
-    | $T_\mathrm{{BB}}$ | Surface Temperature of a Black Body |
-    | $T_\mathrm{{sun}}$ | Surface temperature of the sun ( { T_sun:0,.0f} K ) |
-    | $r_\mathrm{{sun}}$ | Radius of the sun ( {r_sun/1000:0,.0f} km ) |
-    | $R_\mathrm{{orbit}}$ | Distance from the sun |
-    | $g_\mathrm{{earth}}$ | Acceleration due to gravity on earth ( {g_earth:0.2f} $\mathrm{{m}} / \mathrm{{s}}^2$ )
-    | $\phi$ | Latitude |
-    | $\mathrm{{au}}$ | Astronomical unit ( distance sun$\,\leftrightarrow\,$earth = {au/1000:0,.0f} km )
-    | $\omega$|cloud cover (fraction)|
-    | $\Gamma$|Temperature lapse rate|
-    """
-    )
+    | $\rmsub{T}{BB}$ | Surface Temperature of a Black Body ${}$ |
+    | $\rmsub{T}{sun}$ | Surface temperature of the sun ( """f"{ T_sun:0,.0f}"r""" K ) ${}$ |
+    | $\rmsub{r}{sun}$ | Radius of the sun ( """f"{r_sun/1000:0,.0f} km )"r""" ${}$ |
+    | $\rmsub{R}{orbit}$ | Distance from the sun ${}$ |
+    | $\rmsub{g}{\,Eearth}$ | Acceleration due to gravity on earth ( """f"{g_earth:0.2f}"r"""$\,\mathrm{m} / \mathrm{s}^2$ )|
+    | $\phi$ | Latitude ${}$ |
+    | $\mathrm{au}$ | Astronomical unit ( distance sun$\,\leftrightarrow\,$earth = """f"{au/1000:0,.0f} km )"r"""
+    | $\omega$|cloud cover (fraction) ${}$ |
+    | $\Gamma$|Temperature lapse rate ${}$ |
+    | $\rmsub{\sigma}{SB}$| The Stefan-Boltzmann constant ( """f"${σ_SB+TeX_0:0.3eT3[W/(m**2*K)]}$"r""" ) |
+    """ )
     return
 
 
@@ -203,37 +210,36 @@ def _():
 
 @app.cell(hide_code=True)
 def _():
+    #States
     get_R_orbit,set_R_orbit=mo.state(au)
     return get_R_orbit, set_R_orbit
 
 
 @app.cell(hide_code=True)
 def _(set_R_orbit):
+    #Selectors
     def update_R_orbit(*args,**kwargs):
         new_R_orbit=Planet_selector.value[Orbit_selector.value]
         if new_R_orbit != 0.0:
             set_R_orbit(new_R_orbit)
 
     Planet_selector=mo.ui.dropdown(options=Planets, value="Earth", on_change=update_R_orbit) 
-    Orbit_options={key:Planets["Earth"]._fields.index(value) for key,value in {"orbit":"R_orbit","perihelion":"r_per","aphelion":"r_ap"}.items()}
-    Orbit_selector=mo.ui.dropdown(options=Orbit_options,value="orbit", on_change=update_R_orbit)
-    return Orbit_selector, Planet_selector
-
-
-@app.cell(hide_code=True)
-def _():
+    Orbit_options={key:Planets["Earth"]._fields.index(value) for key,value in {"orbit avg.":"R_orbit","perihelion":"r_per","aphelion":"r_ap"}.items()}
+    Orbit_selector=mo.ui.dropdown(options=Orbit_options,value="orbit avg.", on_change=update_R_orbit)
     R_orbit_unit=mo.ui.dropdown(options=Length_units,value="au")
-    return (R_orbit_unit,)
+    return Orbit_selector, Planet_selector, R_orbit_unit
 
 
 @app.cell(hide_code=True)
 def _(R_orbit_unit, get_R_orbit, set_R_orbit):
+    #Edit number
     R_orbit_number=mo.ui.number(value=get_R_orbit()/R_orbit_unit.value, on_change=lambda R_au:set_R_orbit(R_au*R_orbit_unit.value))
     return (R_orbit_number,)
 
 
 @app.cell(hide_code=True)
 def _(get_R_orbit):
+    #Calculations 
     T_BB=T_sun*(r_sun**2/get_R_orbit()**2*1/4)**(1/4)
     return (T_BB,)
 
@@ -249,10 +255,10 @@ def _(
 ):
     mo.md(
         rf"""
-    {Planet_selector}{Orbit_selector}$\;R=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\,=\,{get_R_orbit()*TeX_1:0.3eTe[m]}$
+    {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\,=\,{get_R_orbit()*TeX_1:0.3eT3[m]}$
 
     $$T_\mathrm{{ {Planet_selector.selected_key} }}
-    ={T_sun+TeX_0:.3eTe[K]} \cdot \sqrt[\raisebox{{-1pt}}{{$^4$}}]{{\frac{{({r_sun+TeX_0:,.3eTe[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0,.3eTe[m]})^{{\,2}}}}\cdot\frac{{1}}{{4}}}}
+    ={T_sun+TeX_0:.3eT3[K]} \cdot \sqrt[\raisebox{{-1pt}}{{$^4$}}]{{\frac{{({r_sun+TeX_0:,.3eT3[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0,.3eT3[m]})^{{\,2}}}}\cdot\frac{{1}}{{4}}}}
     ={T_BB+TeX_0:0.1fT[K]}
     ={T_BB-TeX_C:0.1fT[°C]}$$
     """
@@ -276,16 +282,16 @@ def _(
 ):
     mo.md(
         rf"""
-    {Planet_selector}{Orbit_selector}$\;R=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\;=\,{sci_tex(get_R_orbit(),"0.3e","m","e")}$
+    {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\;=\,{sci_tex(get_R_orbit(),"0.3E","m","3")}$
 
     $$
-    q_\mathrm{{\,{Planet_selector.selected_key}}} = {sci_tex(σ_SB,"0.3e","W/m^2*K**4","e")} \cdot ({sci_tex(T_sun,"0.3e","K")})^4
-    \cdot \frac{{({sci_tex(r_sun,"0.3e","m","e")})^{{\,2}}}} {{({sci_tex(get_R_orbit(),"0.3e","m","e")})^{{\,2}}}}
+    q_\mathrm{{\,{Planet_selector.selected_key}}} = {sci_tex(σ_SB,"0.3e","W:m^2*K**4","3")} \cdot ({sci_tex(T_sun,"0.3e","K")})^4
+    \cdot \frac{{({sci_tex(r_sun,"0.3e","m","3")})^{{\,2}}}} {{({sci_tex(get_R_orbit(),"0.3e","m","3")})^{{\,2}}}}
     = {sci_tex(
 
     σ_SB * T_sun**4 * r_sun**2 / get_R_orbit()**2 ,
 
-    "0.3e","W/m^2","e")}
+    "0.3e","W:m^2","3")}
     $$
     """
     )
@@ -313,6 +319,43 @@ def _():
     """
     )
     return
+
+
+app._unparsable_cell(
+    r"""
+    mo.md(
+        f\"\"\"
+    {TeX_Macro}\" r\\"\"\"
+    $$T_\mathrm{GB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{
+    \frac{1-\omega}  {1-\omega+\omega \cdot\epsilon}
+    \cdot\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}
+    \cdot\frac{1}{4}}$$
+
+    $$ \epsilon
+    =\frac{\rmsub{q}{cloud}}{\rmsub{q}{surf}}
+    =\left(\frac{\rmsub{T}{cloud}}{\rmsub{T}{surf}}\right)^4
+    $$
+
+    $$ \rmsub{T}{cloud}=\rmsub{T}{surf} + \Gamma \cdot \rmsub{h}{cloud}$$
+
+    $$ \epsilon
+    =\left(\frac{\rmsub{T}{surf} + \Gamma \cdot \rmsub{h}{cloud}}{\rmsub{T}{surf}}\right)^4
+    =\left(1+\frac{\Gamma}{\rmsub{T}{surf}} \cdot \rmsub{h}{cloud}\right)^4
+    $$ 
+
+    Since $\Gamma$ is negative, we could get negative argument values for very high values of $\rmsub{h}{cloud}$. By limiting the argument to values $\gt$ 0, we can limit the $\epsilon$ to a range between $\epsilon=1$ (\ for $\rmsub{h}{cloud}=0$\ ) and $\epsilon=0$ (\ for $\rmsub{h}{cloud} \gt \rmsub{T}{surf}/\;{\Gamma}$\ ):
+
+    $$ \epsilon (\rmsub{h}{cloud})
+    =\left[\mathrm{max}\left(0,\, 1+\frac{\Gamma}{\rmsub{T}{surf}} \cdot \rmsub{h}{cloud}\right)\right]^4
+    $$ 
+
+    For Earth the value of $\rmsub{T}{surf}/\;{\Gamma}$ is approximately $288.15\;\mathrm{K}\; /\; 6.5\mathrm{\frac{K}{km}}=44.33\;\mathrm{km}$. This is much higher than the highest tropospheric clouds. 
+    \"\"
+    \"\"\"
+    )
+    """,
+    name="_"
+)
 
 
 @app.cell(hide_code=True)
@@ -393,73 +436,7 @@ def _():
 
 
 @app.cell
-def _(TeX_Macro):
-    mo.md(
-        rf"""
-    {TeX_Macro} 
-
-    $$\dd T z$$
-
-    $$\rot v $$
-
-    $$\Grad T  $$
-    """
-    )
-    return
-
-
-@app.cell
 def _():
-    return
-
-
-@app.cell
-def _(TeX_Macro):
-    mo.md(
-        rf"""
-    {TeX_Macro}
-
-    $$\dd T z$$
-    """
-    )
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _(TeX_Macro):
-    (TeX_Macro,)  # Triggers macro registration
-
-    # Example: Splice static LaTeX with interpolated vars (no f-flag on mo.md)
-    temp = 300  # Some dynamic value
-    static_part = r"The temperature gradient is $$\Grad{T}$$."
-    dynamic_part = r"Its curl is $$\rot{\mathbf{v}}$$. Partial: $$\dd{T}{z}$$."
-    interpolated = f"At {temp}K, {static_part} {dynamic_part}"  # f-string only here, if needed
-
-    mo.md(interpolated)
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _(TeX_Macro):
-    (TeX_Macro, )  # Triggers macro registration
-
-    # Example: Splice static LaTeX with interpolated vars (no f-flag on mo.md) 
-    _temp = 300  # Some dynamic value 
-    mo.md(
-    f"At {_temp}K, "
-    r"The temperature gradient is $$\Grad{T}$$."
-    r"Its curl is $$\rot{\mathbf{v}}$$. Partial: $$\dd{T}{z}$$."
-    )
     return
 
 
@@ -475,17 +452,92 @@ def _():
     return
 
 
+app._unparsable_cell(
+    r"""
+    mo.md(
+        f\"\"\"
+    {TeX_Macro}\"
+    r\\"\"\"
+    $$\dd T z ,\ \Grad A ,\ \rot {\mathbf v},\ \rmsub{T}{cloud}$$
+    \"\"
+    \"\"\"
+    )
+    """,
+    name="_"
+)
+
+
 @app.cell
 def _():
-    #this is used to mahe sure this cell is run before the cells that are using the macros
+    #This is a setup cell for global LaTeX definitions and css styles
+    #This cell should run only once if it is not changed, because it does
+    #not have any inputs (except mo.md).
+    #Add new definitions to the top of this list as the re-definitions of
+    #the alrealy existing commands will cause an error that prevents the
+    #statements below this line from being executed 
     _TeX_Macro=r"""$$
+    \newcommand{\rmsub}[2]{#1_\mathrm{#2}}
     \newcommand{\dd}[2]{\frac{\mathrm d\: #1}{\mathrm d\: #2}}
     \newcommand{\Grad}[1]{\mathrm{Grad} \large( #1 \large)}
     \newcommand{\rot}[1]{\mathrm{curl} \left( #1 \right)}
     $$
     """
+    #changed markdown style
+    _css="""
+    <style>
+    /* Minimal scientific table: horizontal lines only, no grids */
+    .prose table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 14px;
+      margin: 1em 0;
+      border-top: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .prose table th,
+    .prose table td {
+      border: none; /* No verticals or cell borders */
+      padding: 4px 6px;
+      text-align: left;
+      background-color: white;
+      vertical-align: top;
+    }
+
+    .prose table th {
+      border-bottom: 2px solid #333; /* Header underline */
+      font-weight: bold;
+    }
+
+    /* Remove even-row striping */
+    .prose table tbody tr:nth-child(even) {
+      background-color: transparent;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .prose table {
+        border-top-color: #4b5563;
+        border-bottom-color: #4b5563;
+      }
+      .prose table th,
+      .prose table td {
+        background-color: #1f2937;
+      }
+      .prose table th {
+        border-bottom-color: #d1d5db;
+      }
+    }
+    </style>
+    """
+    #The global variable "TeX_Macro" is used to create dependencies between this cell
+    #and the cells using the macros. This forces this cell to run before the cells that 
+    #use the macros defined here.
+    #The easiest way to creaate a dependency to this cell is to reference the "TeX_Maxro"
+    #variable by using it in a markdown f string: mo.md(f"{TeX_Macro} ..."). The value of 
+    #TeX_Macro is an empty string, so it will not show up in the rendered markdown text.
     TeX_Macro=""
-    mo.md(_TeX_Macro) 
+    mo.md(_css+_TeX_Macro) #run the macro definitions by rendering the _TeX_Macro string.
     return (TeX_Macro,)
 
 
