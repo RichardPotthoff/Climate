@@ -168,11 +168,12 @@ def _():
 
 @app.cell(hide_code=True)
 def _(TeX_Macro):
-    mo.md(f"{TeX_Macro}"r"""
+    (TeX_Macro,)
+    mo.md(r"""
     # Symbols and Constants
     | Symbol | Definition |
     | ---:|:--- |
-    | $\rmsub{T}{BB}$ | Surface Temperature of a Black Body ${}$ |
+    | $\rmsub{T}{BB}$  | Surface Temperature of a Black Body ${}$ |
     | $\rmsub{T}{sun}$ | Surface temperature of the sun ( """f"{ T_sun:0,.0f}"r""" K ) ${}$ |
     | $\rmsub{r}{sun}$ | Radius of the sun ( """f"{r_sun/1000:0,.0f} km )"r""" ${}$ |
     | $\rmsub{R}{orbit}$ | Distance from the sun ${}$ |
@@ -182,7 +183,7 @@ def _(TeX_Macro):
     | $\omega$|cloud cover (fraction) ${}$ |
     | $\Gamma$|Temperature lapse rate ${}$ |
     | $\rmsub{\sigma}{SB}$| The Stefan-Boltzmann constant ( """f"${σ_SB+TeX_0:0.3eT3[W/(m**2*K)]}$"r""" ) |
-    """ )
+    """)
     return
 
 
@@ -193,9 +194,9 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _():
-    mo.md(
-        r"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     ## Uniform Temperature
 
     The temperature of a black body in orbit around the sun depends on the temperature of the sun, the size of the sun, and distance of the planet from the sun: 
@@ -203,8 +204,7 @@ def _():
     $$T_\mathrm{BB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}\cdot\frac{1}{4}}$$
 
     The factor $1/4$ is the ratio of the projected area of earth (its shaddow area), divided by the surface area (which radiates infrared radiation into space).
-    """
-    )
+    """)
     return
 
 
@@ -251,23 +251,24 @@ def _(
     R_orbit_number,
     R_orbit_unit,
     T_BB,
+    TeX_Macro,
     get_R_orbit,
 ):
-    mo.md(
-        rf"""
+    (TeX_Macro,)
+    mo.md(rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\,=\,{get_R_orbit()*TeX_1:0.3eT3[m]}$
 
     $$T_\mathrm{{ {Planet_selector.selected_key} }}
     ={T_sun+TeX_0:.3eT3[K]} \cdot \sqrt[\raisebox{{-1pt}}{{$^4$}}]{{\frac{{({r_sun+TeX_0:,.3eT3[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0,.3eT3[m]})^{{\,2}}}}\cdot\frac{{1}}{{4}}}}
     ={T_BB+TeX_0:0.1fT[K]}
     ={T_BB-TeX_C:0.1fT[°C]}$$
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
-def _():
+def _(TeX_Macro):
+    (TeX_Macro,)
     mo.md(r"""$$q_\mathrm{{orbit}}=\sigma_\mathrm{{SB}} \cdot T_{{sun}}^4\cdot \frac{{r_\mathrm{{sun}}^{{\,2}}}} {{R_\mathrm{{orbit}}^{{\,2}}}}$$""")
     return
 
@@ -278,10 +279,11 @@ def _(
     Planet_selector,
     R_orbit_number,
     R_orbit_unit,
+    TeX_Macro,
     get_R_orbit,
 ):
-    mo.md(
-        rf"""
+    (TeX_Macro,)
+    mo.md(rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\;=\,{sci_tex(get_R_orbit(),"0.3E","m","3")}$
 
     $$
@@ -293,15 +295,14 @@ def _(
 
     "0.3e","W:m^2","3")}
     $$
-    """
-    )
+    """)
     return
 
 
 @app.cell
-def _():
-    mo.md(
-        r"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     ## Effect of Clouds on the Temperature of the Planet
     ### Grey Body
     The eart is not a black body, so a correction has to be made for the light that is reflected and not absorbed. The albedo of earth is for the most part caused by clouds that have a high reflectivity compared to the oceans and the land. The ice at the poles has also a high reflectivity for sunlight, but there is not much light that could be reflected at the poles. 
@@ -316,16 +317,14 @@ def _():
 
     It turns out, that the temperature of a grey body is the same as the temperature of a grey body, because the $({1-\omega})$ terms in the enumerator and denominator cancel out.
     To make the model more realistic, we can add the infrared radiation emitted by the clouds back in, but the amount of radiation emitted by the clouds depends on the temperature, and the temperature is a function of the altitude: High clouds will be colder and emit less infraded radiation than low clouds fog near the ground.
-    """
-    )
+    """)
     return
 
 
-app._unparsable_cell(
-    r"""
-    mo.md(
-        f\"\"\"
-    {TeX_Macro}\" r\\"\"\"
+@app.cell
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     $$T_\mathrm{GB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{
     \frac{1-\omega}  {1-\omega+\omega \cdot\epsilon}
     \cdot\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}
@@ -350,18 +349,14 @@ app._unparsable_cell(
     $$ 
 
     For Earth the value of $\rmsub{T}{surf}/\;{\Gamma}$ is approximately $288.15\;\mathrm{K}\; /\; 6.5\mathrm{\frac{K}{km}}=44.33\;\mathrm{km}$. This is much higher than the highest tropospheric clouds. 
-    \"\"
-    \"\"\"
-    )
-    """,
-    name="_"
-)
+    """)
+    return
 
 
 @app.cell(hide_code=True)
-def _():
-    mo.md(
-        r"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     ## Temperature as a Function of the Latitude
 
     Assuming that the Temperature is the same across the whole surface of the black body is not very realistic for large bodies like the earth: The poles are much colder than the equator because the rays from the sun hit the surface at a shallower angle.
@@ -379,9 +374,9 @@ def _():
 
 
 @app.cell
-def _():
-    mo.md(
-        r"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     ### Cloud Temperature as Function of Altitude
     The main reason for the vertical temperature gradient in the atmosphere is gravity, as can be deduced trom the equation for the temperature laps rate $\Gamma$ :
 
@@ -389,34 +384,31 @@ def _():
     $$ \Gamma = \frac{\mathrm dT}{\mathrm dh} = -\frac{g}{c_{p}}$$
 
     In this equation, $\ g$ is the acceleration due to gravity, and $c_p$ the specific heat capacity of the air at constant pressure. For dry air the temperature lapse rate can be calculated as follows:
-    """
-    )
+    """)
     return
 
 
 @app.cell
-def _():
-    mo.md(
-        rf"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(rf"""
     $$\Gamma_\mathrm{{dry\ air}}
     =-\frac{{{g_earth+TeX_0:.2fT[m/s^2]}}}{{{cp_air/TeX_k:0.3fT[kJ/kg*K]}}}
     =-{g_earth/cp_air*TeX_k:0.2fT[°C/km]}$$
-    """
-    )
+    """)
     return
 
 
 @app.cell
-def _():
-    mo.md(
-        rf"""
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(rf"""
     This is the calculated value for *dry* air. For humid air, the heat capacity of the air is larger, because of the latent heat of water vapor. This leads to a lower value for the temperature lapse rate. Thermal convection in the atmosphere also reduces the temperature difference between high altitudes and low altitudes, because air from warmer regions of the earth tend to layer on top of colder air from colder regions, thus further reducing the thermal gradient. A commonly used average value for the temperature lapse rate in earth's atmosphere is: 
 
     $$
     \Gamma 
     \approx -{TeXfloat(6.5):0.1fT[°C/km]}$$
-    """
-    )
+    """)
     return
 
 
@@ -452,19 +444,13 @@ def _():
     return
 
 
-app._unparsable_cell(
-    r"""
-    mo.md(
-        f\"\"\"
-    {TeX_Macro}\"
-    r\\"\"\"
+@app.cell
+def _(TeX_Macro):
+    (TeX_Macro,)
+    mo.md(r"""
     $$\dd T z ,\ \Grad A ,\ \rot {\mathbf v},\ \rmsub{T}{cloud}$$
-    \"\"
-    \"\"\"
-    )
-    """,
-    name="_"
-)
+    """)
+    return
 
 
 @app.cell
