@@ -21,6 +21,7 @@ with app.setup(hide_code=True):
     from numpy import sin,cos,pi
     import re
     from typing import Self
+    import sys
     au=149_597_870_700 # [m] (by definition) astronomical unit: distance sun<->earth
     r_sun=695_700_000 # [m] radius of the sun
     T_sun=5_772.0 # [K] surface temperature of the sun
@@ -171,6 +172,8 @@ def _():
     | $g_\mathrm{{earth}}$ | Acceleration due to gravity on earth ( {g_earth:0.2f} $\mathrm{{m}} / \mathrm{{s}}^2$ )
     | $\phi$ | Latitude |
     | $\mathrm{{au}}$ | Astronomical unit ( distance sun$\,\leftrightarrow\,$earth = {au/1000:0,.0f} km )
+    | $\omega$|cloud cover (fraction)|
+    | $\Gamma$|Temperature lapse rate|
     """
     )
     return
@@ -289,6 +292,29 @@ def _(
     return
 
 
+@app.cell
+def _():
+    mo.md(
+        r"""
+    ## Effect of Clouds on the Temperature of the Planet
+    ### Grey Body
+    The eart is not a black body, so a correction has to be made for the light that is reflected and not absorbed. The albedo of earth is for the most part caused by clouds that have a high reflectivity compared to the oceans and the land. The ice at the poles has also a high reflectivity for sunlight, but there is not much light that could be reflected at the poles. 
+    To keep the model simple, I assume (for now) that the albedo of the earth is caused by the clouds. 
+    Another correction has to be made for the infrared radiation from the surface that is blocked by the same clouds. 
+    For the case that the fraction of daylight relected by clouds, $\  \omega$, is the same as the fraction of the infrared light that is reflected back to earth we can  calculate the temperature of this "grey body": 
+
+    $$T_\mathrm{GB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{
+    \frac{1-\omega}  {1-\omega}
+    \cdot\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}
+    \cdot\frac{1}{4}}$$
+
+    It turns out, that the temperature of a grey body is the same as the temperature of a grey body, because the $({1-\omega})$ terms in the enumerator and denominator cancel out.
+    To make the model more realistic, we can add the infrared radiation emitted by the clouds back in, but the amount of radiation emitted by the clouds depends on the temperature, and the temperature is a function of the altitude: High clouds will be colder and emit less infraded radiation than low clouds fog near the ground.
+    """
+    )
+    return
+
+
 @app.cell(hide_code=True)
 def _():
     mo.md(
@@ -309,6 +335,48 @@ def _():
     return
 
 
+@app.cell
+def _():
+    mo.md(
+        r"""
+    ### Cloud Temperature as Function of Altitude
+    The main reason for the vertical temperature gradient in the atmosphere is gravity, as can be deduced trom the equation for the temperature laps rate $\Gamma$ :
+
+
+    $$ \Gamma = \frac{\mathrm dT}{\mathrm dh} = -\frac{g}{c_{p}}$$
+
+    In this equation, $\ g$ is the acceleration due to gravity, and $c_p$ the specific heat capacity of the air at constant pressure. For dry air the temperature lapse rate can be calculated as follows:
+    """
+    )
+    return
+
+
+@app.cell
+def _():
+    mo.md(
+        rf"""
+    $$\Gamma_\mathrm{{dry\ air}}
+    =-\frac{{{g_earth+TeX_0:.2fT[m/s^2]}}}{{{cp_air/TeX_k:0.3fT[kJ/kg*K]}}}
+    =-{g_earth/cp_air*TeX_k:0.2fT[°C/km]}$$
+    """
+    )
+    return
+
+
+@app.cell
+def _():
+    mo.md(
+        rf"""
+    This is the calculated value for *dry* air. For humid air, the heat capacity of the air is larger, because of the latent heat of water vapor. This leads to a lower value for the temperature lapse rate. Thermal convection in the atmosphere also reduces the temperature difference between high altitudes and low altitudes, because air from warmer regions of the earth tend to layer on top of colder air from colder regions, thus further reducing the thermal gradient. A commonly used average value for the temperature lapse rate in earth's atmosphere is: 
+
+    $$
+    \Gamma 
+    \approx -{TeXfloat(6.5):0.1fT[°C/km]}$$
+    """
+    )
+    return
+
+
 @app.cell(hide_code=True)
 def _():
     h_Trop=12000 #m
@@ -322,6 +390,103 @@ def _():
     plt.legend()
     plt.gca()
     return
+
+
+@app.cell
+def _(TeX_Macro):
+    mo.md(
+        rf"""
+    {TeX_Macro} 
+
+    $$\dd T z$$
+
+    $$\rot v $$
+
+    $$\Grad T  $$
+    """
+    )
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(TeX_Macro):
+    mo.md(
+        rf"""
+    {TeX_Macro}
+
+    $$\dd T z$$
+    """
+    )
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(TeX_Macro):
+    (TeX_Macro,)  # Triggers macro registration
+
+    # Example: Splice static LaTeX with interpolated vars (no f-flag on mo.md)
+    temp = 300  # Some dynamic value
+    static_part = r"The temperature gradient is $$\Grad{T}$$."
+    dynamic_part = r"Its curl is $$\rot{\mathbf{v}}$$. Partial: $$\dd{T}{z}$$."
+    interpolated = f"At {temp}K, {static_part} {dynamic_part}"  # f-string only here, if needed
+
+    mo.md(interpolated)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(TeX_Macro):
+    (TeX_Macro, )  # Triggers macro registration
+
+    # Example: Splice static LaTeX with interpolated vars (no f-flag on mo.md) 
+    _temp = 300  # Some dynamic value 
+    mo.md(
+    f"At {_temp}K, "
+    r"The temperature gradient is $$\Grad{T}$$."
+    r"Its curl is $$\rot{\mathbf{v}}$$. Partial: $$\dd{T}{z}$$."
+    )
+    return
+
+
+@app.cell
+def _():
+    mo.md(r"""#Appendix""")
+    return
+
+
+@app.cell
+def _():
+    mo.md(r"""## TeX Macro Definitions""")
+    return
+
+
+@app.cell
+def _():
+    #this is used to mahe sure this cell is run before the cells that are using the macros
+    _TeX_Macro=r"""$$
+    \newcommand{\dd}[2]{\frac{\mathrm d\: #1}{\mathrm d\: #2}}
+    \newcommand{\Grad}[1]{\mathrm{Grad} \large( #1 \large)}
+    \newcommand{\rot}[1]{\mathrm{curl} \left( #1 \right)}
+    $$
+    """
+    TeX_Macro=""
+    mo.md(_TeX_Macro) 
+    return (TeX_Macro,)
 
 
 if __name__ == "__main__":
