@@ -10,7 +10,7 @@
 import marimo
 
 __generated_with = "0.16.5"
-app = marimo.App(width="medium")
+app = marimo.App(width="medium", layout_file="layouts/CloudEffect.slides.json")
 
 with app.setup(hide_code=True):
     # Initialization code that runs before all other cells
@@ -127,7 +127,7 @@ with app.setup(hide_code=True):
         def __rmul__(self, other: float) -> Self:   return(self.__class__(super().__rmul__(other)))
         def __rtruediv__(self, other: float)->Self: return(self.__class__(super().__rtruediv__(other))) 
         def __format__(self, spec: str) -> str:
-            pattern =  r'^(?P<format>[^Tt]*)(?:(?P<sep>[tT])(?P<style>[^[])?(?:\[(?P<unit>.*))\])?$'
+            pattern =  r'^\s*(?P<format>[^Tt]*)(?:(?P<sep>[tT])(?P<style>[^[])?(?:\[(?P<unit>.*))\])?$'
             fmt, unit, style=spec, None, None
             match=re.match(pattern,spec)
             if match:      
@@ -153,6 +153,14 @@ with app.setup(hide_code=True):
     TeX_M=TeXfloat(1e6)
     TeX_G=TeXfloat(1e9)
     TeX_T=TeXfloat(1e12)
+    TeX_Macro=r"""
+    $$
+    \providecommand{\rmsub}[2]{#1_\mathrm{#2}}
+    \providecommand{\dd}[2]{\frac{\mathrm{d} \: #1}{\mathrm{d} \: #2}}
+    \providecommand{\rt}[2]{ \sqrt[\raisebox{-1pt}{$^{#1}$}]  { #2 }}
+    $$ 
+
+    """
 
 
 @app.cell
@@ -167,9 +175,9 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
+def _(css_styles):
+    (css_styles,)
+    mo.md(f"{TeX_Macro}" r"""
     # Symbols and Constants
     | Symbol | Definition |
     | ---:|:--- |
@@ -194,14 +202,14 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
+def _():
+    ()
+    mo.md(f"{TeX_Macro}"r"""
     ## Uniform Temperature
 
     The temperature of a black body in orbit around the sun depends on the temperature of the sun, the size of the sun, and distance of the planet from the sun: 
 
-    $$T_\mathrm{BB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}\cdot\frac{1}{4}}$$
+    $$\rmsub{T}{BB}=T_\mathrm{sun}\cdot \rt{4}{\frac{\rmsub{r}{sun}^2} {\rmsub{R}{orbit}^{\,2}}\cdot\frac{1}{4}}$$
 
     The factor $1/4$ is the ratio of the projected area of earth (its shaddow area), divided by the surface area (which radiates infrared radiation into space).
     """)
@@ -251,15 +259,14 @@ def _(
     R_orbit_number,
     R_orbit_unit,
     T_BB,
-    TeX_Macro,
     get_R_orbit,
 ):
     (TeX_Macro,)
-    mo.md(rf"""
+    mo.md(f"{TeX_Macro}"rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\,=\,{get_R_orbit()*TeX_1:0.3eT3[m]}$
 
-    $$T_\mathrm{{ {Planet_selector.selected_key} }}
-    ={T_sun+TeX_0:.3eT3[K]} \cdot \sqrt[\raisebox{{-1pt}}{{$^4$}}]{{\frac{{({r_sun+TeX_0:,.3eT3[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0,.3eT3[m]})^{{\,2}}}}\cdot\frac{{1}}{{4}}}}
+    $$\rmsub{{T}}{{ {Planet_selector.selected_key} }}
+    ={T_sun+TeX_0:.3eT3[K]} \cdot \rt{{4}}{{\frac{{({r_sun+TeX_0:,.3eT3[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0,.3eT3[m]})^{{\,2}}}}\cdot\frac{{1}}{{4}}}}
     ={T_BB+TeX_0:0.1fT[K]}
     ={T_BB-TeX_C:0.1fT[°C]}$$
     """)
@@ -267,9 +274,11 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""$$q_\mathrm{{orbit}}=\sigma_\mathrm{{SB}} \cdot T_{{sun}}^4\cdot \frac{{r_\mathrm{{sun}}^{{\,2}}}} {{R_\mathrm{{orbit}}^{{\,2}}}}$$""")
+def _():
+    ()
+    mo.md(f"{TeX_Macro}"r"""$$
+    \rmsub{q}{orbit}=\rmsub{\sigma}{SB} \cdot \rmsub{T}{sun}^4 \cdot \frac{\rmsub{r}{sun}^{\,2}} {\rmsub{R}{orbit}^{\,2}} 
+    $$""")
     return
 
 
@@ -279,30 +288,30 @@ def _(
     Planet_selector,
     R_orbit_number,
     R_orbit_unit,
-    TeX_Macro,
     get_R_orbit,
 ):
-    (TeX_Macro,)
-    mo.md(rf"""
+    ()
+    mo.md(f"{TeX_Macro}"rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\;=\,{sci_tex(get_R_orbit(),"0.3E","m","3")}$
 
     $$
-    q_\mathrm{{\,{Planet_selector.selected_key}}} = {sci_tex(σ_SB,"0.3e","W:m^2*K**4","3")} \cdot ({sci_tex(T_sun,"0.3e","K")})^4
-    \cdot \frac{{({sci_tex(r_sun,"0.3e","m","3")})^{{\,2}}}} {{({sci_tex(get_R_orbit(),"0.3e","m","3")})^{{\,2}}}}
-    = {sci_tex(
+    \rmsub{{q}}{{\,{Planet_selector.selected_key}}} 
+    = {σ_SB+TeX_0:0.3T3[W:m^2*K**4]} \cdot ({T_sun+TeX_0:0.3eT3[K]})^4
+    \cdot \frac{{({r_sun+TeX_0:0.3eT3[m]})^{{\,2}}}} {{({get_R_orbit()+TeX_0:0.3eT3[m]})^{{\,2}}}}
+    = {  
 
-    σ_SB * T_sun**4 * r_sun**2 / get_R_orbit()**2 ,
+    σ_SB * T_sun**4 * r_sun**2 / get_R_orbit()**2 + TeX_0
 
-    "0.3e","W:m^2","3")}
+    :0.3eT3[W:m**2]}
     $$
     """)
     return
 
 
 @app.cell
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
+def _():
+    ()
+    mo.md(f"{TeX_Macro}"r"""
     ## Effect of Clouds on the Temperature of the Planet
     ### Grey Body
     The eart is not a black body, so a correction has to be made for the light that is reflected and not absorbed. The albedo of earth is for the most part caused by clouds that have a high reflectivity compared to the oceans and the land. The ice at the poles has also a high reflectivity for sunlight, but there is not much light that could be reflected at the poles. 
@@ -310,9 +319,9 @@ def _(TeX_Macro):
     Another correction has to be made for the infrared radiation from the surface that is blocked by the same clouds. 
     For the case that the fraction of daylight relected by clouds, $\  \omega$, is the same as the fraction of the infrared light that is reflected back to earth we can  calculate the temperature of this "grey body": 
 
-    $$T_\mathrm{GB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{
+    $$\rmsub{T}{GB}=\rmsub{T}{sun}\cdot \rt{4}{
     \frac{1-\omega}  {1-\omega}
-    \cdot\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}
+    \cdot\frac{\rmsub{r}{sun}^2} {\rmsub{R}{orbit}^{\,2}}
     \cdot\frac{1}{4}}$$
 
     It turns out, that the temperature of a grey body is the same as the temperature of a grey body, because the $({1-\omega})$ terms in the enumerator and denominator cancel out.
@@ -322,41 +331,41 @@ def _(TeX_Macro):
 
 
 @app.cell
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
-    $$T_\mathrm{GB}=T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{
+def _():
+    ()
+    mo.md(f"{TeX_Macro}"r"""
+    $$\rmsub T{GB}=\rmsub T{sun}\cdot\rt{4}{
     \frac{1-\omega}  {1-\omega+\omega \cdot\epsilon}
-    \cdot\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}
+    \cdot\frac{\rmsub r{sun}^2}  {\rmsub R{orbit}^{\,2}}
     \cdot\frac{1}{4}}$$
 
     $$ \epsilon
-    =\frac{\rmsub{q}{cloud}}{\rmsub{q}{surf}}
-    =\left(\frac{\rmsub{T}{cloud}}{\rmsub{T}{surf}}\right)^4
+    =\frac{\rmsub q{cloud}}{\rmsub q{surf}}
+    =\left(\frac{\rmsub T{cloud}}{\rmsub T{surf}}\right)^4
     $$
 
-    $$ \rmsub{T}{cloud}=\rmsub{T}{surf} + \Gamma \cdot \rmsub{h}{cloud}$$
+    $$ \rmsub T{cloud}=\rmsub T{surf} + \Gamma \cdot \rmsub h{cloud}$$
 
     $$ \epsilon
-    =\left(\frac{\rmsub{T}{surf} + \Gamma \cdot \rmsub{h}{cloud}}{\rmsub{T}{surf}}\right)^4
-    =\left(1+\frac{\Gamma}{\rmsub{T}{surf}} \cdot \rmsub{h}{cloud}\right)^4
+    =\left(\frac{\rmsub T{surf} + \Gamma \cdot \rmsub h{cloud}}{\rmsub T{surf}}\right)^4
+    =\left(1+\frac{\Gamma}{\rmsub T{surf}} \cdot \rmsub h{cloud}\right)^4
     $$ 
 
-    Since $\Gamma$ is negative, we could get negative argument values for very high values of $\rmsub{h}{cloud}$. By limiting the argument to values $\gt$ 0, we can limit the $\epsilon$ to a range between $\epsilon=1$ (\ for $\rmsub{h}{cloud}=0$\ ) and $\epsilon=0$ (\ for $\rmsub{h}{cloud} \gt \rmsub{T}{surf}/\;{\Gamma}$\ ):
+    Since $\Gamma$ is negative, we could get negative argument values for very high values of $\rmsub h{cloud}$. By limiting the argument to values $\gt$ 0, we can limit the $\epsilon$ to a range between $\epsilon=1$ (\ for $\rmsub h{cloud}=0$\ ) and $\epsilon=0$ (\ for $\rmsub h{cloud} \gt \rmsub T{surf}/\;{\Gamma}$\ ):
 
     $$ \epsilon (\rmsub{h}{cloud})
     =\left[\mathrm{max}\left(0,\, 1+\frac{\Gamma}{\rmsub{T}{surf}} \cdot \rmsub{h}{cloud}\right)\right]^4
     $$ 
 
-    For Earth the value of $\rmsub{T}{surf}/\;{\Gamma}$ is approximately $288.15\;\mathrm{K}\; /\; 6.5\mathrm{\frac{K}{km}}=44.33\;\mathrm{km}$. This is much higher than the highest tropospheric clouds. 
+    For Earth the value of $\rmsub T{surf}/\;{\Gamma}$ is approximately $288.15\;\mathrm{K}\; /\; 6.5\mathrm{\frac{K}{km}}=44.33\;\mathrm{km}$. This is much higher than the highest tropospheric clouds. 
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
+def _():
+    ()
+    mo.md(f"{TeX_Macro}"r"""
     ## Temperature as a Function of the Latitude
 
     Assuming that the Temperature is the same across the whole surface of the black body is not very realistic for large bodies like the earth: The poles are much colder than the equator because the rays from the sun hit the surface at a shallower angle.
@@ -365,7 +374,8 @@ def _(TeX_Macro):
 
     The factor $1/4$ can then be replaced by the ratio $\cos(\phi)/\pi$. This the projected area of a conical frustum divided by its mantle surface area:
 
-    $$T_\mathrm{BB}(\phi) = T_\mathrm{sun}\cdot\sqrt[\raisebox{-1pt}{$^4$}]{\frac{r_\mathrm{sun}^2}  {R_\mathrm{orbit}^{\,2}}\cdot\frac{\cos(\phi)}{\pi}}$$
+    $$\rmsub T{BB}(\phi) 
+    = \rmsub T{sun}\cdot\rt{4}{\frac{\rmsub r{sun}^2} {\rmsub R{orbit}^{\,2}} \cdot\frac{\cos(\phi)}{\pi}}$$
 
     To keep the equation simple, it was assumed that the axis of rotation is perpendicular to the direction of the sun. This is strictly true only at the spring and fall equinoxes.
     """
@@ -374,14 +384,14 @@ def _(TeX_Macro):
 
 
 @app.cell
-def _(TeX_Macro):
+def _():
     (TeX_Macro,)
     mo.md(r"""
     ### Cloud Temperature as Function of Altitude
     The main reason for the vertical temperature gradient in the atmosphere is gravity, as can be deduced trom the equation for the temperature laps rate $\Gamma$ :
 
 
-    $$ \Gamma = \frac{\mathrm dT}{\mathrm dh} = -\frac{g}{c_{p}}$$
+    $$ \Gamma = \dd{T}{h} = -\frac{g}{c_{p}}$$
 
     In this equation, $\ g$ is the acceleration due to gravity, and $c_p$ the specific heat capacity of the air at constant pressure. For dry air the temperature lapse rate can be calculated as follows:
     """)
@@ -389,18 +399,18 @@ def _(TeX_Macro):
 
 
 @app.cell
-def _(TeX_Macro):
+def _():
     (TeX_Macro,)
     mo.md(rf"""
     $$\Gamma_\mathrm{{dry\ air}}
-    =-\frac{{{g_earth+TeX_0:.2fT[m/s^2]}}}{{{cp_air/TeX_k:0.3fT[kJ/kg*K]}}}
-    =-{g_earth/cp_air*TeX_k:0.2fT[°C/km]}$$
+    =-\frac{{{g_earth+TeX_0:.2fT[m/s^2]}}}{{{cp_air/TeX_k:0.3fT[kJ/(kg*K)]}}}
+    =-{g_earth/cp_air*TeX_k:0.2fT[°C:km]}$$
     """)
     return
 
 
 @app.cell
-def _(TeX_Macro):
+def _():
     (TeX_Macro,)
     mo.md(rf"""
     This is the calculated value for *dry* air. For humid air, the heat capacity of the air is larger, because of the latent heat of water vapor. This leads to a lower value for the temperature lapse rate. Thermal convection in the atmosphere also reduces the temperature difference between high altitudes and low altitudes, because air from warmer regions of the earth tend to layer on top of colder air from colder regions, thus further reducing the thermal gradient. A commonly used average value for the temperature lapse rate in earth's atmosphere is: 
@@ -429,27 +439,13 @@ def _():
 
 @app.cell
 def _():
-    return
-
-
-@app.cell
-def _():
     mo.md(r"""#Appendix""")
     return
 
 
 @app.cell
 def _():
-    mo.md(r"""## TeX Macro Definitions""")
-    return
-
-
-@app.cell
-def _(TeX_Macro):
-    (TeX_Macro,)
-    mo.md(r"""
-    $$\dd T z ,\ \Grad A ,\ \rot {\mathbf v},\ \rmsub{T}{cloud}$$
-    """)
+    mo.md(r"""## Custom css Definitions""")
     return
 
 
@@ -461,15 +457,8 @@ def _():
     #Add new definitions to the top of this list as the re-definitions of
     #the alrealy existing commands will cause an error that prevents the
     #statements below this line from being executed 
-    _TeX_Macro=r"""$$
-    \newcommand{\rmsub}[2]{#1_\mathrm{#2}}
-    \newcommand{\dd}[2]{\frac{\mathrm d\: #1}{\mathrm d\: #2}}
-    \newcommand{\Grad}[1]{\mathrm{Grad} \large( #1 \large)}
-    \newcommand{\rot}[1]{\mathrm{curl} \left( #1 \right)}
-    $$
-    """
     #changed markdown style
-    _css="""
+    css_styles="""
     <style>
     /* Minimal scientific table: horizontal lines only, no grids */
     .prose table {
@@ -484,7 +473,7 @@ def _():
     .prose table th,
     .prose table td {
       border: none; /* No verticals or cell borders */
-      padding: 4px 6px;
+      padding: 4px 6px; /* changed from 8px 12px */
       text-align: left;
       background-color: white;
       vertical-align: top;
@@ -522,9 +511,8 @@ def _():
     #The easiest way to creaate a dependency to this cell is to reference the "TeX_Maxro"
     #variable by using it in a markdown f string: mo.md(f"{TeX_Macro} ..."). The value of 
     #TeX_Macro is an empty string, so it will not show up in the rendered markdown text.
-    TeX_Macro=""
-    mo.md(_css+_TeX_Macro) #run the macro definitions by rendering the _TeX_Macro string.
-    return (TeX_Macro,)
+    mo.md(css_styles) #render the css string.
+    return (css_styles,)
 
 
 if __name__ == "__main__":
