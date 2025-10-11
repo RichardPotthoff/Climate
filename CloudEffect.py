@@ -173,7 +173,7 @@ def _():
     return (mo,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         f"""
@@ -228,14 +228,14 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     #States
     get_R_orbit,set_R_orbit=mo.state(au)
     return get_R_orbit, set_R_orbit
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo, set_R_orbit):
     #Selectors
     def update_R_orbit(*args,**kwargs):
@@ -250,14 +250,14 @@ def _(mo, set_R_orbit):
     return Orbit_selector, Planet_selector, R_orbit_unit
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(R_orbit_unit, get_R_orbit, mo, set_R_orbit):
     #Edit number
     R_orbit_number=mo.ui.number(value=get_R_orbit()/R_orbit_unit.value, on_change=lambda R_au:set_R_orbit(R_au*R_orbit_unit.value))
     return (R_orbit_number,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(get_R_orbit):
     #Calculations 
     T_BB=T_sun*(r_sun**2/get_R_orbit()**2*1/4)**(1/4)
@@ -274,8 +274,8 @@ def _(
     get_R_orbit,
     mo,
 ):
-    (TeX_Macro,)
-    mo.md(f"{TeX_Macro}"rf"""
+    ()
+    mo.md(rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\,=\,{get_R_orbit()*TeX_1:0.3eT3[m]}$
 
     $$\rmsub{{T}}{{ {Planet_selector.selected_key} }}
@@ -289,7 +289,7 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     ()
-    mo.md(f"{TeX_Macro}"r"""$$
+    mo.md(r"""$$
     \rmsub{q}{orbit}=\rmsub{\sigma}{SB} \cdot \rmsub{T}{sun}^4 \cdot \frac{\rmsub{r}{sun}^{\,2}} {\rmsub{R}{orbit}^{\,2}} 
     $$""")
     return
@@ -305,7 +305,7 @@ def _(
     mo,
 ):
     ()
-    mo.md(f"{TeX_Macro}"rf"""
+    mo.md(rf"""
     {Planet_selector}   $\;R\;${Orbit_selector}$\;=\;${R_orbit_number if not Planet_selector.value[Orbit_selector.value] else get_R_orbit()/R_orbit_unit.value:0.6} {R_orbit_unit}$\;=\,{sci_tex(get_R_orbit(),"0.3E","m","3")}$
 
     $$
@@ -322,10 +322,10 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     ()
-    mo.md(f"{TeX_Macro}"r"""
+    mo.md(r"""
     ## Effect of Clouds on the Temperature of the Planet
     ### Grey Body
     The eart is not a black body, so a correction has to be made for the light that is reflected and not absorbed. The albedo of earth is for the most part caused by clouds that have a high reflectivity compared to the oceans and the land. The ice at the poles has also a high reflectivity for sunlight, but there is not much light that could be reflected at the poles. 
@@ -344,10 +344,10 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     ()
-    mo.md(f"{TeX_Macro}"r"""
+    mo.md(r"""
     $$\rmsub T{GB}=\rmsub T{sun}\cdot\rt{4}{
     \frac{1-\omega}  {1-\omega+\omega \cdot\epsilon}
     \cdot\frac{\rmsub r{sun}^2}  {\rmsub R{orbit}^{\,2}}
@@ -379,7 +379,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     ()
-    mo.md(f"{TeX_Macro}"r"""
+    mo.md(r"""
     ## Temperature as a Function of the Latitude
 
     Assuming that the Temperature is the same across the whole surface of the black body is not very realistic for large bodies like the earth: The poles are much colder than the equator because the rays from the sun hit the surface at a shallower angle.
@@ -397,9 +397,9 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    (TeX_Macro,)
+    ()
     mo.md(r"""
     ### Cloud Temperature as Function of Altitude
     The main reason for the vertical temperature gradient in the atmosphere is gravity, as can be deduced trom the equation for the temperature laps rate $\Gamma$ :
@@ -412,9 +412,9 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    (TeX_Macro,)
+    ()
     mo.md(rf"""
     $$\Gamma_\mathrm{{dry\ air}}
     =-\frac{{{g_earth+TeX_0:.2fT[m/s^2]}}}{{{cp_air/TeX_k:0.3fT[kJ/(kg*K)]}}}
@@ -423,9 +423,9 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    (TeX_Macro,)
+    ()
     mo.md(rf"""
     This is the calculated value for *dry* air. For humid air, the heat capacity of the air is larger, because of the latent heat of water vapor. This leads to a lower value for the temperature lapse rate. Thermal convection in the atmosphere also reduces the temperature difference between high altitudes and low altitudes, because air from warmer regions of the earth tend to layer on top of colder air from colder regions, thus further reducing the thermal gradient. A commonly used average value for the temperature lapse rate in earth's atmosphere is: 
 
@@ -451,28 +451,21 @@ def _():
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""#Appendix""")
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""## Custom css Definitions""")
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    #This is a setup cell for global LaTeX definitions and css styles
-    #This cell should run only once if it is not changed, because it does
-    #not have any inputs (except mo.md).
-    #Add new definitions to the top of this list as the re-definitions of
-    #the alrealy existing commands will cause an error that prevents the
-    #statements below this line from being executed 
-    #changed markdown style
-    css_styles="""
+    _css_styles="""
     <style>
     /* Minimal scientific table: horizontal lines only, no grids */
     .prose table {
@@ -519,13 +512,7 @@ def _(mo):
     }
     </style>
     """
-    #The global variable "TeX_Macro" is used to create dependencies between this cell
-    #and the cells using the macros. This forces this cell to run before the cells that 
-    #use the macros defined here.
-    #The easiest way to creaate a dependency to this cell is to reference the "TeX_Maxro"
-    #variable by using it in a markdown f string: mo.md(f"{TeX_Macro} ..."). The value of 
-    #TeX_Macro is an empty string, so it will not show up in the rendered markdown text.
-    mo.md(css_styles) #render the css string.
+    mo.md(_css_styles) #render the css string.
     return
 
 
