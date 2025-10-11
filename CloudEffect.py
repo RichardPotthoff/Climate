@@ -10,7 +10,7 @@
 import marimo
 
 __generated_with = "0.16.5"
-app = marimo.App(width="medium", layout_file="layouts/CloudEffect.slides.json")
+app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
     # Initialization code that runs before all other cells
@@ -161,6 +161,15 @@ with app.setup(hide_code=True):
     $$ 
 
     """
+    import tempfile
+    from pathlib import Path
+
+    # Create temp file and load macros
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.tex', delete=True) as _f:
+        _f.write(TeX_Macro)
+        _f.flush()
+        _temp_path = Path(_f.name)
+        mo.latex(filename=_temp_path)
 
 
 @app.cell
@@ -204,15 +213,17 @@ def _():
 @app.cell(hide_code=True)
 def _():
     ()
-    mo.md(f"{TeX_Macro}"r"""
+    _m=mo.md(f"{TeX_Macro}"r"""
     ## Uniform Temperature
 
     The temperature of a black body in orbit around the sun depends on the temperature of the sun, the size of the sun, and distance of the planet from the sun: 
 
-    $$\rmsub{T}{BB}=T_\mathrm{sun}\cdot \rt{4}{\frac{\rmsub{r}{sun}^2} {\rmsub{R}{orbit}^{\,2}}\cdot\frac{1}{4}}$$
+    $$\rmsub T{BB}=\rmsub T{sun}\cdot \rt{4}{\frac{\rmsub r{sun}^2} {\rmsub R{orbit}^{\,2}}\cdot\frac{1}{4}}$$
 
     The factor $1/4$ is the ratio of the projected area of earth (its shaddow area), divided by the surface area (which radiates infrared radiation into space).
     """)
+    print(_m.text)
+    _m
     return
 
 
@@ -513,6 +524,31 @@ def _():
     #TeX_Macro is an empty string, so it will not show up in the rendered markdown text.
     mo.md(css_styles) #render the css string.
     return (css_styles,)
+
+
+@app.cell
+def _():
+    ()
+    mo.md(rf"""{TeX_Macro}"""r"""
+    # markdown heading   
+    $$
+    \rmsub T{sub}
+    $$
+
+    A line of text with inline $\dd T h$ TeX.
+    """)
+    return
+
+
+@app.cell
+def _():
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.tex', delete=True) as f:
+        f.write(TeX_Macro)
+        f.flush()
+        temp_path = Path(f.name)
+        with open(temp_path,'r') as g:
+          print(g.read())
+    return
 
 
 if __name__ == "__main__":
