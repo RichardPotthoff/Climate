@@ -14,7 +14,7 @@ app = marimo.App(width="medium")
 
 with app.setup(hide_code=True):
     # Initialization code that runs before all other cells
-    import marimo as mo
+    #import marimo as mo
     from matplotlib import pyplot as plt
     import numpy as np
     from collections import namedtuple
@@ -161,19 +161,20 @@ with app.setup(hide_code=True):
     $$ 
 
     """
-    import tempfile
-    from pathlib import Path
+    import time
+    startup_trigger=time.time()
 
-    # Create temp file and load macros
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.tex', delete=True) as _f:
-        _f.write(TeX_Macro)
-        _f.flush()
-        _temp_path = Path(_f.name)
-        mo.latex(filename=_temp_path)
+
+@app.cell(hide_code=True)
+def _():
+    (startup_trigger,)
+    import marimo as mo  
+    mo.md(rf"""{TeX_Macro} $$%\rt{4}{5}$$""")
+    return (mo,)
 
 
 @app.cell
-def _():
+def _(mo):
     mo.md(
         f"""
     # Table of Contents
@@ -184,9 +185,9 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(css_styles):
-    (css_styles,)
-    mo.md(f"{TeX_Macro}" r"""
+def _(mo):
+    ()
+    mo.md(r"""
     # Symbols and Constants
     | Symbol | Definition |
     | ---:|:--- |
@@ -205,15 +206,15 @@ def _(css_styles):
 
 
 @app.cell(hide_code=True)
-def _():
+def _(mo):
     mo.md(r"""# Earth as a Black Body""")
     return
 
 
 @app.cell(hide_code=True)
-def _():
+def _(mo):
     ()
-    _m=mo.md(f"{TeX_Macro}"r"""
+    _m=mo.md(r"""
     ## Uniform Temperature
 
     The temperature of a black body in orbit around the sun depends on the temperature of the sun, the size of the sun, and distance of the planet from the sun: 
@@ -222,20 +223,20 @@ def _():
 
     The factor $1/4$ is the ratio of the projected area of earth (its shaddow area), divided by the surface area (which radiates infrared radiation into space).
     """)
-    print(_m.text)
+    #print(_m.text)
     _m
     return
 
 
 @app.cell(hide_code=True)
-def _():
+def _(mo):
     #States
     get_R_orbit,set_R_orbit=mo.state(au)
     return get_R_orbit, set_R_orbit
 
 
 @app.cell(hide_code=True)
-def _(set_R_orbit):
+def _(mo, set_R_orbit):
     #Selectors
     def update_R_orbit(*args,**kwargs):
         new_R_orbit=Planet_selector.value[Orbit_selector.value]
@@ -250,7 +251,7 @@ def _(set_R_orbit):
 
 
 @app.cell(hide_code=True)
-def _(R_orbit_unit, get_R_orbit, set_R_orbit):
+def _(R_orbit_unit, get_R_orbit, mo, set_R_orbit):
     #Edit number
     R_orbit_number=mo.ui.number(value=get_R_orbit()/R_orbit_unit.value, on_change=lambda R_au:set_R_orbit(R_au*R_orbit_unit.value))
     return (R_orbit_number,)
@@ -271,6 +272,7 @@ def _(
     R_orbit_unit,
     T_BB,
     get_R_orbit,
+    mo,
 ):
     (TeX_Macro,)
     mo.md(f"{TeX_Macro}"rf"""
@@ -285,7 +287,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _():
+def _(mo):
     ()
     mo.md(f"{TeX_Macro}"r"""$$
     \rmsub{q}{orbit}=\rmsub{\sigma}{SB} \cdot \rmsub{T}{sun}^4 \cdot \frac{\rmsub{r}{sun}^{\,2}} {\rmsub{R}{orbit}^{\,2}} 
@@ -300,6 +302,7 @@ def _(
     R_orbit_number,
     R_orbit_unit,
     get_R_orbit,
+    mo,
 ):
     ()
     mo.md(f"{TeX_Macro}"rf"""
@@ -320,7 +323,7 @@ def _(
 
 
 @app.cell
-def _():
+def _(mo):
     ()
     mo.md(f"{TeX_Macro}"r"""
     ## Effect of Clouds on the Temperature of the Planet
@@ -342,7 +345,7 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
     ()
     mo.md(f"{TeX_Macro}"r"""
     $$\rmsub T{GB}=\rmsub T{sun}\cdot\rt{4}{
@@ -374,7 +377,7 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _():
+def _(mo):
     ()
     mo.md(f"{TeX_Macro}"r"""
     ## Temperature as a Function of the Latitude
@@ -395,7 +398,7 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
     (TeX_Macro,)
     mo.md(r"""
     ### Cloud Temperature as Function of Altitude
@@ -410,7 +413,7 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
     (TeX_Macro,)
     mo.md(rf"""
     $$\Gamma_\mathrm{{dry\ air}}
@@ -421,7 +424,7 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
     (TeX_Macro,)
     mo.md(rf"""
     This is the calculated value for *dry* air. For humid air, the heat capacity of the air is larger, because of the latent heat of water vapor. This leads to a lower value for the temperature lapse rate. Thermal convection in the atmosphere also reduces the temperature difference between high altitudes and low altitudes, because air from warmer regions of the earth tend to layer on top of colder air from colder regions, thus further reducing the thermal gradient. A commonly used average value for the temperature lapse rate in earth's atmosphere is: 
@@ -449,19 +452,19 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
     mo.md(r"""#Appendix""")
     return
 
 
 @app.cell
-def _():
+def _(mo):
     mo.md(r"""## Custom css Definitions""")
     return
 
 
 @app.cell
-def _():
+def _(mo):
     #This is a setup cell for global LaTeX definitions and css styles
     #This cell should run only once if it is not changed, because it does
     #not have any inputs (except mo.md).
@@ -523,31 +526,6 @@ def _():
     #variable by using it in a markdown f string: mo.md(f"{TeX_Macro} ..."). The value of 
     #TeX_Macro is an empty string, so it will not show up in the rendered markdown text.
     mo.md(css_styles) #render the css string.
-    return (css_styles,)
-
-
-@app.cell
-def _():
-    ()
-    mo.md(rf"""{TeX_Macro}"""r"""
-    # markdown heading   
-    $$
-    \rmsub T{sub}
-    $$
-
-    A line of text with inline $\dd T h$ TeX.
-    """)
-    return
-
-
-@app.cell
-def _():
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.tex', delete=True) as f:
-        f.write(TeX_Macro)
-        f.flush()
-        temp_path = Path(f.name)
-        with open(temp_path,'r') as g:
-          print(g.read())
     return
 
 
